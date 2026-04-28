@@ -1,33 +1,26 @@
-# Common security headers applied to both apex + api.
-(security_headers) {
-	header {
-		# Force HTTPS for the next 2 years on this and all subdomains.
-		# 'preload' opts in to browsers' HSTS preload lists once we submit it.
-		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-		# Block MIME-sniffing — files are served as their declared Content-Type.
-		X-Content-Type-Options "nosniff"
-		# Send only origin (no path/query) on cross-origin navigations.
-		Referrer-Policy "strict-origin-when-cross-origin"
-		# Disable powerful APIs we don't use — defense in depth.
-		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
-		# Don't leak Caddy version.
-		-Server
-	}
-}
-
 # Frontend on root domain
 spreadis.live {
-	import security_headers
-	# Only the frontend is iframe-able context — clamp to deny clickjacking.
-	header X-Frame-Options "DENY"
 	encode zstd gzip
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header X-Content-Type-Options "nosniff"
+	header X-Frame-Options "DENY"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+	header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+	header -Server
+	header -Via
+	header -X-Powered-By
 	reverse_proxy frontend:3000
 }
 
 # Backend API + WebSocket on api subdomain
 api.spreadis.live {
-	import security_headers
 	encode zstd gzip
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header X-Content-Type-Options "nosniff"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+	header -Server
+	header -Via
+	header -X-Powered-By
 	reverse_proxy backend:3001
 }
 
