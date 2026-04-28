@@ -10,11 +10,12 @@ echo "→ Restarting services..."
 docker compose up -d --remove-orphans
 
 # Caddy mounts Caddyfile as a volume — `up -d` won't restart it on file edits.
-# Hot-reload picks up Caddyfile changes without dropping in-flight requests.
-echo "→ Reloading Caddy config..."
+# Tried `caddy reload` (zero-downtime hot-reload) but it silently fails to apply
+# changes when invoked via `docker exec`; full restart is the reliable path.
+# ~2s of downtime for in-flight HTTP requests; WS clients auto-reconnect.
 if docker ps --format '{{.Names}}' | grep -q '^spreadis-caddy$'; then
-  docker exec spreadis-caddy caddy reload --config /etc/caddy/Caddyfile 2>&1 || \
-    echo "  (caddy reload skipped — container not ready yet)"
+  echo "→ Restarting Caddy to pick up Caddyfile changes..."
+  docker compose restart caddy
 fi
 
 echo "→ Pruning dangling images..."
