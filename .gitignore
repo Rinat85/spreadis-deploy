@@ -1,0 +1,16 @@
+# IDE
+.vscode/
+.idea/
+.fleet/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local overrides (kept off git)
+.env
+.env.local
+docker-compose.override.yml
+
+# Logs
+*.log

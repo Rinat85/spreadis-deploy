@@ -1,0 +1,16 @@
+# Frontend on root domain
+spreadis.live {
+    encode zstd gzip
+    reverse_proxy frontend:3000
+}
+
+# Backend API + WebSocket on api subdomain
+api.spreadis.live {
+    encode zstd gzip
+    reverse_proxy backend:3001
+}
+
+# www -> apex redirect
+www.spreadis.live {
+    redir https://spreadis.live{uri} permanent
+}

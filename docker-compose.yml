@@ -1,0 +1,55 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: spreadis-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - spreadis
+    depends_on:
+      - frontend
+      - backend
+
+  backend:
+    image: ghcr.io/rinat85/spreadis-backend:latest
+    container_name: spreadis-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    networks:
+      - spreadis
+    expose:
+      - "3001"
+
+  frontend:
+    image: ghcr.io/rinat85/spreadis-frontend:latest
+    container_name: spreadis-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      NUXT_PUBLIC_API_URL: https://api.spreadis.live
+      NUXT_PUBLIC_WS_URL: wss://api.spreadis.live
+    networks:
+      - spreadis
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+
+networks:
+  spreadis:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
