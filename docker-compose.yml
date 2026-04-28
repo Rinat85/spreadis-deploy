@@ -24,6 +24,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      # Restrict cross-origin requests (HTTP + Socket.IO) to public frontend only.
+      CORS_ORIGINS: https://spreadis.live
     networks:
       - spreadis
     expose:
