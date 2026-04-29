@@ -27,9 +27,13 @@ services:
       # Restrict cross-origin requests (HTTP + Socket.IO) to public frontend only.
       CORS_ORIGINS: https://spreadis.live
     # Secrets: TG_BOT_TOKEN, TG_CHAT_ID, BETTERSTACK_WEBHOOK_SECRET
-    # Defined in .env on the VPS (gitignored).
+    # Defined in .env on the VPS (gitignored). required: false avoids
+    # blocking deploys before the operator has populated .env — if it's
+    # missing, the backend just starts without those vars and webhook-relay
+    # logs a warning + skips Telegram send (other features still work).
     env_file:
-      - .env
+      - path: .env
+        required: false
     networks:
       - spreadis
     expose:
