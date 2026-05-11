@@ -28,3 +28,11 @@ api.spreadis.live {
 www.spreadis.live {
 	redir https://spreadis.live{uri} permanent
 }
+
+# Umami analytics dashboard
+analytics.spreadis.live {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header -Server
+	reverse_proxy umami:3000
+}
