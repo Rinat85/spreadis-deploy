@@ -16,6 +16,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - admin
 
   backend:
     image: ghcr.io/rinat85/spreadis-backend:latest
@@ -25,7 +26,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       # Restrict cross-origin requests (HTTP + Socket.IO) to public frontend only.
-      CORS_ORIGINS: https://spreadis.live
+      CORS_ORIGINS: https://spreadis.live,https://admin.spreadis.live
     # Secrets: TG_BOT_TOKEN, TG_CHAT_ID, BETTERSTACK_WEBHOOK_SECRET
     # Defined in .env on the VPS (gitignored). required: false avoids
     # blocking deploys before the operator has populated .env — if it's
@@ -34,6 +35,9 @@ services:
     env_file:
       - path: .env
         required: false
+    volumes:
+      # Persist admin panel data (blacklist, users, settings) across deploys
+      - backend-admin-data:/app/data
     networks:
       - spreadis
     expose:
@@ -53,6 +57,17 @@ services:
       - spreadis
     expose:
       - "3000"
+    depends_on:
+      - backend
+
+  admin:
+    image: ghcr.io/rinat85/spreadis-admin:latest
+    container_name: spreadis-admin
+    restart: unless-stopped
+    networks:
+      - spreadis
+    expose:
+      - "3002"
     depends_on:
       - backend
 
@@ -95,3 +110,4 @@ volumes:
   caddy_data:
   caddy_config:
   umami-data:
+  backend-admin-data:

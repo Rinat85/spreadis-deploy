@@ -36,3 +36,16 @@ analytics.spreadis.live {
 	header -Server
 	reverse_proxy umami:3000
 }
+
+# Admin panel (separate SPA)
+admin.spreadis.live {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header X-Content-Type-Options "nosniff"
+	header X-Frame-Options "DENY"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+	header -Server
+	header -Via
+	header -X-Powered-By
+	reverse_proxy admin:3002
+}
