@@ -27,6 +27,8 @@ services:
       PORT: 3001
       # Restrict cross-origin requests (HTTP + Socket.IO) to public frontend only.
       CORS_ORIGINS: https://spreadis.live,https://admin.spreadis.live
+      # PostgreSQL connection for Prisma
+      DATABASE_URL: postgresql://spreadis:${SPREADIS_DB_PASSWORD:-spreadis_secret}@spreadis-db:5432/spreadis?schema=public
     # Secrets: TG_BOT_TOKEN, TG_CHAT_ID, BETTERSTACK_WEBHOOK_SECRET
     # Defined in .env on the VPS (gitignored). required: false avoids
     # blocking deploys before the operator has populated .env — if it's
@@ -35,13 +37,13 @@ services:
     env_file:
       - path: .env
         required: false
-    volumes:
-      # Persist admin panel data (blacklist, users, settings) across deploys
-      - backend-admin-data:/app/data
     networks:
       - spreadis
     expose:
       - "3001"
+    depends_on:
+      spreadis-db:
+        condition: service_healthy
 
   frontend:
     image: ghcr.io/rinat85/spreadis-frontend:latest
@@ -84,6 +86,24 @@ services:
     networks:
       - spreadis
 
+  spreadis-db:
+    image: postgres:16-alpine
+    container_name: spreadis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spreadis
+      POSTGRES_USER: spreadis
+      POSTGRES_PASSWORD: ${SPREADIS_DB_PASSWORD:-spreadis_secret}
+    volumes:
+      - spreadis-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spreadis"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spreadis
+
   umami-db:
     image: postgres:15-alpine
     container_name: spreadis-umami-db
@@ -109,5 +129,5 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  spreadis-pgdata:
   umami-data:
-  backend-admin-data:
