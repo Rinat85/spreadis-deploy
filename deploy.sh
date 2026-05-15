@@ -37,7 +37,7 @@ if docker ps --format '{{.Names}}' | grep -q '^spreadis-caddy$'; then
 fi
 
 echo "→ Pruning dangling images..."
-docker image prune -f
+docker image prune -f 2>/dev/null || true
 
 echo "→ Status:"
 docker compose ps
