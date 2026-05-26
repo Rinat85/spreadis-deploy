@@ -87,7 +87,12 @@ services:
       - spreadis
 
   spreadis-db:
-    image: postgres:16-alpine
+    # TimescaleDB on top of PostgreSQL 16. Same data-directory layout as
+    # the plain postgres:16-alpine image we used before, so the existing
+    # spreadis-pgdata volume picks up in place — no dump/restore needed.
+    # The 20260526000000_spread_ticks Prisma migration enables the
+    # extension and converts spread_ticks into a hypertable.
+    image: timescale/timescaledb:latest-pg16
     container_name: spreadis-db
     restart: unless-stopped
     environment:
