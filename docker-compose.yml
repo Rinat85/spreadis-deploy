@@ -95,6 +95,13 @@ services:
     image: timescale/timescaledb:latest-pg16
     container_name: spreadis-db
     restart: unless-stopped
+    # Force-preload the timescaledb library. The image only auto-configures
+    # shared_preload_libraries during a FRESH initdb; we switched onto an
+    # existing postgres:16 data dir, so that step was skipped and
+    # `CREATE EXTENSION timescaledb` crashed the connection (P1017). The
+    # explicit `-c` flag makes postgres load the library on every start
+    # regardless of what's in the data dir's postgresql.conf.
+    command: postgres -c shared_preload_libraries=timescaledb
     environment:
       POSTGRES_DB: spreadis
       POSTGRES_USER: spreadis
