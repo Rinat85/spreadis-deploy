@@ -3,8 +3,26 @@
 # Run from spreadis-deploy/ on VPS: ./deploy.sh
 set -euo pipefail
 
+# Serialize concurrent deploys. The frontend and backend repos each trigger
+# their own Deploy workflow; pushing to both around the same time runs two
+# SSH sessions that both `git reset --hard` + `docker compose pull` on the
+# same daemon and the same checkout dir at once. That race is what made one
+# of a parallel pair fail with "error from registry: denied" (concurrent
+# GHCR pulls getting throttled / interrupted) while a manual re-run passed.
+# flock makes the second invocation wait for the first to finish (up to 5m).
+exec 9>/tmp/spreadis-deploy.lock
+echo "→ Acquiring deploy lock..."
+if ! flock -w 300 9; then
+  echo "  ✗ another deploy held the lock for >5m — aborting"
+  exit 1
+fi
+
 echo "→ Pulling latest images from ghcr.io..."
-docker compose pull
+# --ignore-pull-failures: one image that can't be pulled (a private package
+# the VPS isn't authed for — e.g. spreadis-admin — or a transient registry
+# hiccup) must not abort the whole deploy. Services that pulled fine still
+# get restarted below; the failed one keeps its current running image.
+docker compose pull --ignore-pull-failures
 
 echo "→ Restarting services..."
 docker compose up -d --remove-orphans
