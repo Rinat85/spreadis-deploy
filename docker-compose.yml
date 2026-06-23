@@ -22,6 +22,16 @@ services:
     image: ghcr.io/rinat85/spreadis-backend:latest
     container_name: spreadis-backend
     restart: unless-stopped
+    # Memory guard. Backend plateaus at ~800-900 MB (ccxt + 16 exchanges +
+    # ticker/candle buffers) on a 1.86 GB box; combined with the rest of the
+    # stack it has twice pushed the whole VM into swap-thrash (98% iowait).
+    # Cap at 1100 MB with memswap_limit = mem_limit so the container gets NO
+    # swap — if it ever exceeds the cap, the OOM-killer kills just this
+    # container and `restart: unless-stopped` brings it back, instead of the
+    # kernel swapping system-wide and freezing every service. 1100 sits well
+    # above the observed peak (~925 MB) so normal operation is never killed.
+    mem_limit: 1100m
+    memswap_limit: 1100m
     environment:
       NODE_ENV: production
       PORT: 3001
