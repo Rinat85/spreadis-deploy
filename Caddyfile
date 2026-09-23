@@ -49,3 +49,19 @@ admin.spreadis.live {
 	header -X-Powered-By
 	reverse_proxy admin:3002
 }
+
+# school-helper: Mini App родительского комитета + вебхук Telegram-бота.
+# Контейнер school-helper живёт в своём compose (/opt/school-helper) и
+# подключён к этой сети через docker-compose.proxy.yml.
+class.spreadis.live {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header X-Content-Type-Options "nosniff"
+	header Referrer-Policy "strict-origin-when-cross-origin"
+	header -Server
+	header -Via
+	header -X-Powered-By
+	# Без X-Frame-Options, в отличие от остальных блоков: Telegram Web и
+	# десктоп открывают Mini App во фрейме, DENY его сломает.
+	reverse_proxy school-helper:8080
+}
