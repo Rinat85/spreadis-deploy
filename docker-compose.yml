@@ -73,19 +73,6 @@ services:
     depends_on:
       - backend
 
-  umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest
-    container_name: spreadis-umami
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://umami:umami_secret_pw@umami-db:5432/umami
-      APP_SECRET: spreadis-umami-secret-2026
-    depends_on:
-      umami-db:
-        condition: service_healthy
-    networks:
-      - spreadis
-
   spreadis-db:
     # TimescaleDB on top of PostgreSQL 16. Same data-directory layout as
     # the plain postgres:16-alpine image we used before, so the existing
@@ -116,24 +103,6 @@ services:
     networks:
       - spreadis
 
-  umami-db:
-    image: postgres:15-alpine
-    container_name: spreadis-umami-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: umami
-      POSTGRES_USER: umami
-      POSTGRES_PASSWORD: umami_secret_pw
-    volumes:
-      - umami-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U umami"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - spreadis
-
 networks:
   spreadis:
     driver: bridge
@@ -142,4 +111,3 @@ volumes:
   caddy_data:
   caddy_config:
   spreadis-pgdata:
-  umami-data:
